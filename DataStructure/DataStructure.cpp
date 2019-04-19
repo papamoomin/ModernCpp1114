@@ -300,7 +300,7 @@ void ArrayStack<T>::Push(T a)
 		stack = new T[stackSize];
 
 		for (int i = 0; i < stackSize; ++i)
-			stack[i] = (i < stackSize - 10) ? temp[i] : 0;
+			stack[i] = (i < stackSize - 10) ? temp[i] : T();
 
 		delete[] temp;
 	}
