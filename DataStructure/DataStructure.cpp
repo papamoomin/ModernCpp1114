@@ -38,6 +38,7 @@ class SinglyLinkedList
 {
 private:
 	Node<T> *head, *tail;
+	int count;
 
 public:
 
@@ -45,7 +46,9 @@ public:
 	~SinglyLinkedList();
 
 	void Insert(T num);
-	void Remove(T num);
+	void Insert(T num, int index);
+	void RemoveValue(T num);
+	void Remove(int index);
 	void Print();
 	void RemoveAll();
 };
@@ -57,6 +60,7 @@ SinglyLinkedList<T>::SinglyLinkedList()
 	tail = new Node<T>;
 	head->next = tail;
 	tail->next = tail;
+	count = 0;
 }
 
 template <typename T>
@@ -70,10 +74,25 @@ void SinglyLinkedList<T>::Insert(T num)
 
 	cursor->next = temp;
 	temp->next = tail;
+	++count;
 }
 
 template <typename T>
-void SinglyLinkedList<T>::Remove(T num)
+void SinglyLinkedList<T>::Insert(T num, int index)
+{
+	Node<T> *cursor = head;
+	Node<T> *temp = new Node<T>(num);
+
+	for (int i = index; i > 0; --i)
+		cursor = cursor->next;
+
+	temp->next = cursor->next;
+	cursor->next = temp;
+	++count;
+}
+
+template <typename T>
+void SinglyLinkedList<T>::RemoveValue(T num)
 {
 	Node<T> *cursor = head;
 
@@ -88,6 +107,21 @@ void SinglyLinkedList<T>::Remove(T num)
 		cursor = cursor->next;
 	}
 
+	--count;
+	Node<T> *temp = cursor->next;
+	cursor->next = temp->next;
+	delete temp;
+}
+
+template <typename T>
+void SinglyLinkedList<T>::Remove(int index)
+{
+	Node<T> *cursor = head;
+
+	for (int i = index; i > 0; --i)
+		cursor = cursor->next;
+
+	--count;
 	Node<T> *temp = cursor->next;
 	cursor->next = temp->next;
 	delete temp;
@@ -121,6 +155,7 @@ void SinglyLinkedList<T>::RemoveAll()
 	}
 
 	head->next = tail;
+	count = 0;
 }
 
 template <typename T>
@@ -138,6 +173,7 @@ class DoublyLinkedList
 {
 private:
 	Node<T> *head, *tail;
+	int count;
 
 public:
 
@@ -146,7 +182,9 @@ public:
 
 	void InsertFront(T a);
 	void InsertBack(T a);
-	void Remove(T a);
+	void Insert(T a, int index);
+	void RemoveValue(T a);
+	void Remove(int index);
 	void RemoveAll();
 	void Print();
 	void PrintBack();
@@ -161,6 +199,7 @@ DoublyLinkedList<T>::DoublyLinkedList()
 	head->next = tail;
 	tail->prev = head;
 	tail->next = tail;
+	count = 0;
 }
 
 template <typename T>
@@ -171,6 +210,7 @@ void DoublyLinkedList<T>::InsertFront(T a)
 	temp->prev = head;
 	head->next = temp;
 	temp->next->prev = temp;
+	++count;
 }
 
 template <typename T>
@@ -181,10 +221,33 @@ void DoublyLinkedList<T>::InsertBack(T a)
 	temp->next = tail;
 	tail->prev->next = temp;
 	tail->prev = temp;
+	++count;
 }
 
 template <typename T>
-void DoublyLinkedList<T>::Remove(T a)
+void DoublyLinkedList<T>::Insert(T a, int index)
+{
+	if (index > count)
+	{
+		cout << "잘못된 인덱스 번호입니다." << endl;
+		return;
+	}
+
+	Node<T> *cursor = head;
+	Node<T> *temp = new Node<T>(a);
+
+	for (int i = index; i > 0; --i)
+		cursor = cursor->next;
+
+	temp->prev = cursor;
+	temp->next = cursor->next;
+	temp->next->prev = temp;
+	cursor->next = temp;
+	++count;
+}
+
+template <typename T>
+void DoublyLinkedList<T>::RemoveValue(T a)
 {
 	Node<T> *cursor = head;
 	while (cursor->next->value != a)
@@ -198,10 +261,31 @@ void DoublyLinkedList<T>::Remove(T a)
 		cursor = cursor->next;
 	}
 
+	--count;
 	Node<T> *temp = cursor->next;
 	cursor->next = temp->next;
 	temp->next->prev = cursor;
 	delete temp;
+}
+
+template <typename T>
+void DoublyLinkedList<T>::Remove(int index)
+{
+	if (index >= count)
+	{
+		cout << "리스트에 해당 수가 없습니다" << endl;
+		return;
+	}
+
+	Node<T> *cursor = head;
+
+	for (int i = index; i > -1; --i)
+		cursor = cursor->next;
+
+	cursor->prev->next = cursor->next;
+	cursor->next->prev = cursor->prev;
+	delete cursor;
+	--count;
 }
 
 template <typename T>
@@ -219,6 +303,7 @@ void DoublyLinkedList<T>::RemoveAll()
 
 	head->next = tail;
 	tail->prev = head;
+	count = 0;
 }
 
 template <typename T>
