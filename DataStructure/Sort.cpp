@@ -56,25 +56,55 @@ void SelectionSort(T *arr, int size) // 10000개 : 582ms
 
 #pragma region
 template <typename T>
-void InsertionSort(vector<T> &arr) // 10000개 : 23346ms
+void InsertionSort(vector<T> &arr) // 10000개 : 21096ms
 {
-	for (int i = 1; i < arr.size(); ++i)
+	for (int i = 1, temp, t; i < arr.size(); ++i)
+	{
+		temp = arr[i];
+		t = i;
+
 		for (int j = i - 1; j > -1; --j)
-			if (arr[j] < arr[j + 1])
+		{
+			if (arr[j] < temp)
+			{
+				t = j + 1;
 				break;
+			}
 			else
-				Swap(arr[j], arr[j + 1]);
+			{
+				arr[j + 1] = arr[j];
+				t = j;
+			}
+		}
+
+		arr[t] = temp;
+	}
 }
 
 template <typename T>
-void InsertionSort(T *arr, int size) // 10000개 : 453ms
+void InsertionSort(T *arr, int size) // 10000개 : 78ms
 {
-	for (int i = 1; i < size; ++i)
+	for (int i = 1, temp, t; i < size; ++i)
+	{
+		temp = arr[i];
+		t = i;
+
 		for (int j = i - 1; j > -1; --j)
-			if (arr[j] < arr[j + 1])
+		{
+			if (arr[j] < temp)
+			{
+				t = j + 1;
 				break;
+			}
 			else
-				Swap(arr[j], arr[j + 1]);
+			{
+				arr[j + 1] = arr[j];
+				t = j;
+			}
+		}
+
+		arr[t] = temp;
+	}
 }
 #pragma endregion InsertionSort
 
@@ -199,7 +229,7 @@ int main()
 	//}
 	//cout << endl << endl;
 	//start = clock();
-	//MergeSort(b, size);
+	//InsertionSort(b, size);
 	//end = clock();
 	//int error = 0;
 	//for (int i = 0; i < size; ++i)
@@ -224,7 +254,7 @@ int main()
 	cout << endl << endl;
 
 	start = clock();
-	MergeSort(a);
+	InsertionSort(a);
 	end = clock();
 
 	int error = 0;
