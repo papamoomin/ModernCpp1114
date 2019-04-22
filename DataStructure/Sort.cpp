@@ -170,10 +170,10 @@ void QuickSort(vector<T> &arr) // 10000°³ : 9ms
 	for (int i = 0; i < arr.size(); ++i)
 		arr2[i] = arr[i];
 
-	Quick(arr, 0, arr.size() - 1);
+	Quick(&arr, 0, arr.size() - 1);
 
 	for (int i = 0; i < arr.size(); ++i)
-		arr1[i] = arr2[i];
+		arr[i] = arr2[i];
 }
 
 template <typename T>
@@ -185,28 +185,27 @@ void QuickSort(T *arr, int size) // 10000°³ : 4ms
 template <typename T>
 void Quick(T *arr, int left, int right)
 {
-	if (left >= right)
-		break;
-
-	int pivot = left + right / 2, leftCursor = left, rightCursor = right;
-
-	while (leftCursor >= rightCursor)
+	int num, i, j, temp;
+	if (right > left)
 	{
-		if (arr[pivot] > arr[leftCursor])
-			++leftCursor;
-		else if (arr[pivot] < arr[rightCursor])
-			--rightCursor;
-		else
-		{
-			Swap(arr[leftCursor], arr[rightCursor]);
-			++leftCursor;
-			--rightCursor;
-		}
-	}
+		num = arr[right];
+		i = left - 1;
+		j = right;
 
-	Swap(arr[leftCursor], arr[pivot]);
-	Quick(arr, left, leftCursor - 1);
-	Quick(arr, leftCursor + 1, right);
+		while (1)
+		{
+			while (arr[++i] < num);
+			while (arr[--j] > num);
+			if (i >= j)
+				break;
+
+			Swap(arr[i], arr[j]);
+		}
+		Swap(arr[i], arr[right]);
+
+		Quick(arr, left, i - 1);
+		Quick(arr, i + 1, right);
+	}
 }
 #pragma endregion QuickSort
 
@@ -221,52 +220,52 @@ int main()
 	int *b = new int[size];
 	clock_t start, end;
 
-	//for (int i = 0; i < size; ++i)
-	//{
-	//	int j = rand() % 10000;
-	//	b[i] = j;
-	//	cout << j << endl;
-	//}
-	//cout << endl << endl;
-	//start = clock();
-	//InsertionSort(b, size);
-	//end = clock();
-	//int error = 0;
-	//for (int i = 0; i < size; ++i)
-	//{
-	//	if (i > 0)
-	//		if (b[i - 1] > b[i])
-	//			++error;
-	//	cout << i << " : " << b[i] << endl;
-	//}
-	//cout << "error : " << error << endl;
-	//double f1 = (double)(end - start);
-	//cout << endl << endl << f1 << endl;
-
-
-
 	for (int i = 0; i < size; ++i)
 	{
-		int j = rand() % 100000;
-		a.push_back(j);
+		//int j = rand() % 10000;
+		b[i] = j;
 		cout << j << endl;
 	}
 	cout << endl << endl;
-
 	start = clock();
-	InsertionSort(a);
+	InsertionSort(b, size);
 	end = clock();
-
 	int error = 0;
 	for (int i = 0; i < size; ++i)
 	{
 		if (i > 0)
-			if (a[i - 1] > a[i])
+			if (b[i - 1] > b[i])
 				++error;
-		cout << i << " : " << a[i] << endl;
+		cout << i << " : " << b[i] << endl;
 	}
 	cout << "error : " << error << endl;
+	double f1 = (double)(end - start);
+	cout << endl << endl << f1 << endl;
 
-	double f2 = (double)(end - start);
-	cout << endl << endl << f2 << endl;
+
+
+	//for (int i = 0; i < size; ++i)
+	//{
+	//	int j = rand() % 100000;
+	//	a.push_back(j);
+	//	cout << j << endl;
+	//}
+	//cout << endl << endl;
+
+	//start = clock();
+	//QuickSort(a);
+	//end = clock();
+
+	//int error = 0;
+	//for (int i = 0; i < size; ++i)
+	//{
+	//	if (i > 0)
+	//		if (a[i - 1] > a[i])
+	//			++error;
+	//	cout << i << " : " << a[i] << endl;
+	//}
+	//cout << "error : " << error << endl;
+
+	//double f2 = (double)(end - start);
+	//cout << endl << endl << f2 << endl;
 }

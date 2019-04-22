@@ -63,7 +63,7 @@ void Kruskal()
 
 		cin >> p2 >> dist;
 
-		if (p1 >= node || p2 >= node)
+		if (p1 >= node || p2 >= node || p1 < 0 || p2 < 0)
 		{
 			cout << "잘못된 입력입니다." << endl;
 			continue;
@@ -110,13 +110,110 @@ void Kruskal()
 		q.pop();
 		cout << get<1>(t) << "/" << get<2>(t) << "/" << get<0>(t) << endl;
 	}
+
+	delete[] root;
 }
 #pragma endregion Kruskal
+
+#pragma region
+void Dijkstra() //에러난 코드이므로 굴리지는 말 것.
+{
+	//int node, p1 = 0, p2, lineDist, cursor, lineCount = 0;
+	//cout << "node의 갯수는? ";
+	//cin >> node;
+	///*int *dist = new int[node];
+	//tupleInt3 *t = new tupleInt3[node];*/
+	//int dist[6];
+	//tupleInt3 t[6];
+
+	//for (int i = 0; i < node; ++i)
+	//	dist[i] = 1000000;
+
+	//for (int i = 0; 1;)
+	//{
+	//	cout << "간선 입력(점1 점2 거리 / 종료는 -1) : ";
+	//	cin >> p1;
+
+	//	if (p1 == -1)
+	//		break;
+
+	//	cin >> p2 >> lineDist;
+
+	//	if (p1 >= node || p2 >= node || p1 < 0 || p2 < 0)
+	//	{
+	//		cout << "잘못된 입력입니다." << endl;
+	//		continue;
+	//	}
+
+	//	t[i++] = tupleInt3(p1, p2, lineDist);
+	//	++lineCount;
+	//}
+
+	//while (1)
+	//{
+	//	cout << "시작 점은 어디입니까? : ";
+	//	cin >> cursor;
+	//	if (cursor >= node || cursor < 0)
+	//	{
+	//		cout << "잘못된 입력입니다." << endl;
+	//		continue;
+	//	}
+	//	dist[cursor] = 0;
+	//	break;
+	//}
+
+	//queue<int> nextCursors;
+	//for (int searchCount = 0; searchCount < lineCount;)
+	//{
+	//	for (int i = 0; i < lineCount; ++i)
+	//	{
+	//		p1 = get<0>(t[i]);
+	//		p2 = get<1>(t[i]);
+
+	//		if (p1 == cursor || p2 == cursor)
+	//		{
+	//			++searchCount;
+	//			lineDist = get<2>(t[i]);
+
+	//			if (p1 == cursor)
+	//			{
+	//				nextCursors.push(p2);
+	//				if (dist[p2] > dist[cursor] + lineDist)
+	//				{
+	//					dist[p2] = dist[cursor] + lineDist;
+	//				}
+	//			}
+	//			else if (p2 == cursor)
+	//			{
+	//				nextCursors.push(p1);
+	//				if (dist[p1] > dist[cursor] + lineDist)
+	//				{
+	//					dist[p1] = dist[cursor] + lineDist;
+	//				}
+	//			}
+
+	//			t[i] = tupleInt3(-1, -1, -1);
+	//		}
+	//	}
+	//	cursor = nextCursors.front();
+	//	nextCursors.pop();
+	//}
+
+	//for (int i = 0; i < node; ++i)
+	//{
+	//	//cout << i << endl;
+	//	cout << dist[i];
+	//	cout << endl;
+	//}
+
+}
+#pragma endregion Dijkstra
+
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cout.tie(NULL);
 
-	Kruskal();
+	Dijkstra();
 }
