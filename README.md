@@ -1,13 +1,8 @@
 # Study
 
-## ModernCpp1114
+## A Tour Of C++
+책 보며 공부한 것 정리  
 
-모던 C++ 공부
-
-[1. C++ 기초 요약](https://github.com/papamoomin/Study/blob/master/Study/1.%20C%2B%2B%20%EA%B8%B0%EC%B4%88.md)
-
----
-
-## Algorithm
-
-[자료구조 및 알고리즘](https://github.com/papamoomin/Study/blob/master/DataStructure/DataStructure.cpp)
+[1. 기초](https://github.com/papamoomin/Study/blob/master/ATourOfC%2B%2B/1.%20%EA%B8%B0%EC%B4%88.md)  
+[2. 사용자 정의 타입](https://github.com/papamoomin/Study/blob/master/ATourOfC%2B%2B/2.%20%EC%82%AC%EC%9A%A9%EC%9E%90%20%EC%A0%95%EC%9D%98%20%ED%83%80%EC%9E%85.md)  
+[3. 모듈화](https://github.com/papamoomin/Study/blob/master/ATourOfC%2B%2B/3.%20%EB%AA%A8%EB%93%88%ED%99%94.md)  
