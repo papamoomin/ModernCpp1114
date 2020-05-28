@@ -380,7 +380,7 @@ private:	connection 	_connect;
 private:	bool		_isClose;
 };
 
-connectionManager::close()
+void connectionManager::close()
 {
 	_connect.close();
 	isClose = true;
@@ -482,7 +482,7 @@ bankAccount::bankAccount()
 	init();	//생성자에서 비가상 함수를 호출한다.
 }
 
-bankAccount::init()
+void bankAccount::init()
 {
 	log();	//근데 그 비가상 함수에서 가상 함수를 호출한다.
 }
@@ -561,3 +561,12 @@ int main()
 
 이렇듯 대입 연산이 사슬처럼 엮이게 하기 위해서는 대입 연산자가 좌변 인자의 참조자를 반환하도록 하여야 한다. 이는 관례나 다름 없는데, 클래스를 만들 때 대입 연산자를 만들게 된다면 이 관례를 지키는 쪽을 추천한다.
 
+```cpp
+class number
+{
+	public:		number& operator=(const number& rhs);
+	public:		number& operator+=(const number& rhs);
+};
+
+number& number::operator=
+```
