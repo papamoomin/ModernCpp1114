@@ -7,6 +7,8 @@
 [8. 예외가 소멸자를 벗어나지 못하게 하라.](#Item8)<br>
 [9. 객체 생성, 소멸 중에는 가상 함수를 호출하지 말라.](#Item9)<br>
 [10. 대입 연산자는 *this의 참조자를 반환하게 하라.](#Item10)<br>
+[11. operator=에는 자기대입에 대한 처리가 필요하다.](#Item11)<br>
+[12. 객체를 복사할 때는 객체의 모든 부분을 빠뜨리지말고 복사하자.](#Item12)<br>
 
 
 <br><br><br>
@@ -557,7 +559,7 @@ int main()
 }
 ```
 
-15는 z에 가장 먼저 대입되고, 갱신된 z가 y에, 갱신된 y가 x에 순차적으로 대입된다.
+```15```는 ```z```에 가장 먼저 대입되고, 갱신된 ```z```가 ```y```에, 갱신된 ```y```가 ```x```에 순차적으로 대입된다.
 
 이렇듯 대입 연산이 사슬처럼 엮이게 하기 위해서는 대입 연산자가 좌변 인자의 참조자를 반환하도록 하여야 한다. 이는 관례나 다름 없는데, 클래스를 만들 때 대입 연산자를 만들게 된다면 이 관례를 지키는 쪽을 추천한다.
 
@@ -568,5 +570,143 @@ class number
 	public:		number& operator+=(const number& rhs);
 };
 
-number& number::operator=
+number& number::operator=(const number& rhs)
+{
+	...
+	return *this;
+}
+
+number& number::operator+=(const number& rhs)
+{
+	...
+	return *this;
+}
+
+number& number::operator=(int rhs)
+{
+	...
+	return *this;
+}
 ```
+
+이렇듯 매개변수가 일반적이지 않을 때에도 같은 규약을 적용하여 ```*this```의 참조자를 반환하도록 하기를 권한다.
+
+
+<br><br><br>
+
+
+<a name="Item11"></a>
+## 11. operator=에는 자기대입에 대한 처리가 필요하다.
+
+```cpp
+class number {...};
+
+int main()
+{
+	number a;
+	a = a;
+}
+```
+
+위의 ```a = a```코드처럼 한 객체가 자기 자신에 대해 대입 연산자를 적용하는 것을 자기대입이라고 한다. 그리고 이런 코드는 옳지 않은 코드이다.
+
+```cpp
+a[i] = a[j];	//i == j일때 자기대입
+*x = *y			//x와 y가 같은 대상을 가리킬 때 자기대입
+```
+
+이런 자기대입이 생기는 이유는 중복참조(aliasing) 때문인데, 객체 여럿을 참조자나 포인터로 삼고 동작하는 코드를 짤 때는 같은 객체가 사용될 가능성을 고려하여야 한다.
+
+```cpp
+class item
+{
+...
+};
+
+class manager
+{
+...
+public:		manager& operator=(const manager& rhs);
+private:	item* _item;	//힙에 할당된 객체를 가리키는 포인터
+};
+
+manager& manager::operator=(const manager& rhs)
+{
+	delete _item;
+	_item = new item(*rhs._item);
+	return *this;
+}
+```
+
+여기서 ```operator=```는 ```*this```가 ```rhs```와 같은 객체일 가능성을 고려하지 않는다. 만약 같은 객체라면 ```delete```하고 ```new```할 필요가 없을 뿐더러, ```this```를 ```delete```하는게 곧 ```rhs```를 delete하는 것이 되는 불상사가 발생한다.
+
+이런 일을 방지하는 간단한 방법 중 하나는 일치성(identity) 검사이다.
+
+```cpp
+manager& manager::operator=(const manager& rhs)
+{
+	if(&rhs != this)
+	{
+		delete _item;
+		_item = new item(*rhs._item);
+	}
+	return *this;
+}
+```
+
+물론 이렇게 하면 위 문제는 해결되지만, ```operator=```는 여전히 예외에 대해 안전하지 않다는 단점이 남아있다. 가장 문제가 될만한 곳은 ```new``` 부분이다. 여기서 동적 할당에 필요한 메모리가 부족하다거나 복사 생성자에서 에외가 터진다거나 하는 일이 발생하면 ```manager``` 객체는 삭제된 ```item``` 포인터를 가지게 된다.
+
+그럼 이제 자기대입과 예외에 안전한 ```operator=```를 살펴보자. 여기서 기억해야 할 점은, 문장 순서를 세심하게 바꾸는 것만으로도 예외에 안전한 코드가 만들어질 때가 많다는 것이다.
+
+```cpp
+manager& manager::operator=(const manager& rhs)
+{
+	item* copyItem = _item;			//기존의 _item을 기억
+	_item = new item(*rhs._item);	//대입 처리
+	delete copyItem					//원래의 _item 삭제
+
+	return *this;
+}
+```
+이 코드는 이제 예외에 안전하며, 일치성 검사 없이도 자기대입에도 안전해졌다. 여기서 일치성 검사를 생략한 이유는, 일치성 검사에 문제가 될 일은 자주 일어나지 않음과 동시에 일치성 검사 자체도 자원을 사용하기 때문이다.
+
+그리고 예외와 자기대입에 모두 안전한 ```operator=``` 방식 중 '복사(copy) 후 맞바꾸기(swap)'라는 방식이 있다.
+
+```cpp
+class manager
+{
+	public:		void swap(manager& rhs);	//구현은 생략.
+};
+
+manager& manager::operator=(const manager& rhs)
+{
+	manager temp(rhs);	//rhs의 사본 생성
+	swap(temp);			//*this와 사본의 데이터 swap
+
+	return *this;
+}
+```
+
+이 방법을 조금 다르게 구현할 수도 있다.
+
+```cpp
+manager& manager::operator=(manager rhs)	//값에 의한 전달로 사본을 만든다.
+{
+	swap(rhs);			//*this와 사본의 데이터 swap
+
+	return *this;
+}
+```
+
+이 구현은 c++에서 복사 대입 연산자는 인자를 값으로 취하도록 선언할 수 있다는 점과, 값에 의한 전달을 수행하면 사본이 생긴다는 점을 이용한 것이다. 다만 이렇게 하면 명확성이 떨어진다는 단점과 함께, 객체 복사 코드가 매개변수의 생성자로 옮겨갔다는 것 덕분에 컴파일러가 더 효율적인 코드를 생성할 가능성이 있다는 장점을 가진다.
+
+<br>
+
+정리해보면, ```operator=```를 구현할 때에는 자기 대입에 대해 유의하여야 한다. 원본과 복사할 객체의 주소를 비교하거나, 문장의 순서를 고려하거나, 카피 앤 스왑을 할 수도 있다. 그리고 둘 이상의 객체에 대해 동작하는 함수가 있는 경우, 같은 객체가 들어가도 동작에 문제가 없는지 확인하는 습관을 들여야 한다.
+
+
+<br><br><br>
+
+
+<a name="Item12"></a>
+## 12. 객체를 복사할 때는 객체의 모든 부분을 빠뜨리지말고 복사하자.
