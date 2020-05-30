@@ -710,3 +710,104 @@ manager& manager::operator=(manager rhs)	//값에 의한 전달로 사본을 만
 
 <a name="Item12"></a>
 ## 12. 객체를 복사할 때는 객체의 모든 부분을 빠뜨리지말고 복사하자.
+
+복사 생성자와 복사 대입 연산자를 객체의 복사 함수(copying function)라고 부른다. 이들은 필요에 따라 컴파일러가 직접 만들기도 하며, 객체가 갖고 있는 데이터를 빠뜨리지 않고 복사한다.
+
+하지만 컴파일러가 만드는 복사 함수의 동작이 아닌, 다른 동작을 원할 때가 있기 마련이다.
+
+```cpp
+void log(const std::string& logData);
+
+class customer
+{
+public:		customer(const customer& rhs);
+public:		customer& 		operator=(const customer& rhs);
+
+private:	std::string 	_data;
+};
+
+customer::customer(const customer& rhs)
+: _data(rhs._data)
+{
+	log("customer copy constructor");
+}
+
+customer& customer::operator=(const customer& rhs)
+{
+	log("customer copy assignment operator");
+	_data = rhs._data;
+	return *this;
+}
+```
+
+문제될 것은 없어보인다.
+
+하지만 만약 클래스에 데이터 멤버가 추가된다면? 그럼 ```operator=```는 모든 데이터를 복사하지 않는 셈이 된다. 컴파일러에서 문제를 삼지도 않는다.
+
+<br>
+
+그리고 만약 여기서 상속까지 받는다면?
+
+```cpp
+class vipCustomer : public customer
+{
+public:		vipCustomer(const vipCustomer& rhs);
+public:		vipCustomer& 	operator=(const vipCustomer& rhs);
+
+private:	int				_vipLevel;
+};
+
+vipCustomer::vipCustomer(const vipCustomer& rhs)
+: _vipLevel(rhs._vipLevel)
+{
+	log("vipCustomer copy constructor");
+}
+
+vipCustomer& vipCustomer::operator=(const vipCustomer& rhs)
+{
+	log("vipCustomer copy assignment operator");
+	_vipLevel = rhs._vipLevel;
+	return *this;
+}
+```
+
+이런 경우는 정상일까? 아니다.
+
+이런 경우 파생 클래스에 새로 선언된 내용은 복사되지만 기본 클래스의 내용은 복사가 안되고 있기 때문. 기본 클래스에 대한 내용은 기본 클래스 생성자에 명시된 기본 초기화만 진행될 것이기에 문제가 발생할 여지가 충분하다.
+
+그렇다고 기본 클래스의 private한 멤버에 접근할 방법도 없으니, 이를 방지하기 위한 방법으로는 기본 클래스의 복사 대입 연산자를 호출해주는 것을 들 수 있겠다.
+
+```cpp
+class vipCustomer : public customer
+{
+public:		vipCustomer(const vipCustomer& rhs);
+public:		vipCustomer& 	operator=(const vipCustomer& rhs);
+
+private:	int				_vipLevel;
+};
+
+vipCustomer::vipCustomer(const vipCustomer& rhs)
+: customer(rhs)										//기본 클래스의 복사 생성자 호출
+, _vipLevel(rhs._vipLevel)
+{
+	log("vipCustomer copy constructor");
+}
+
+vipCustomer& vipCustomer::operator=(const vipCustomer& rhs)
+{
+	log("vipCustomer copy assignment operator");
+	customer::operator=(rhs);						//기본 클래스 복사 대입 연산자 실행
+	_vipLevel = rhs._vipLevel;
+	return *this;
+}
+```
+
+이렇게 하면 해당 클래스의 데이터 멤버와, 기본 클래스의 복사 함수를 모조리 호출해준다.
+
+여기서 주의해야 할 점은, 복사 대입 연산자에서 복사 생성자를 호출하는 것은 안된다는 점이다. 이미 존재하는 객체를 생성할 수는 없는 일이니 말이다.
+
+만약 위 처럼 복사 대입 연산자와 복사 생성자의 본문이 비슷하다면, 공통의 멤버 함수를 만든 후 두 복사 함수가 그 멤버 함수를 호출하게 하는 것이 낫다.
+
+<br>
+
+정리하자면, 객체 복사 함수는 주어진 모든 데이터 멤버와 모든 기본 클래스 멤버에 대해 복사를 해야한다. 그리고 클래스의 복사 함수 둘을 구현할 때에는 한 쪽에서 다른 쪽을 부르는 시도보다는, 공통의 멤버 함수를 만든 후 그 함수를 각 복사 함수에서 호출하게 하는 것이 좋다.
