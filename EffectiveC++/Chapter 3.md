@@ -3,6 +3,7 @@
 # 목차
 [13. 자원 관리에는 객체를 이용하라.](#Item13)<br>
 [14. 자원 관리 클래스의 복사 동작을 확실히 알자.](#Item14)<br>
+[15. 자원 관리 클래스에서 관리하는 자원은 외부에서 접근이 가능하도록 하라.](#Item15)<br>
 
 
 <br><br><br>
@@ -209,4 +210,111 @@ Lock::Lock(Mutex *m)
 <br>
 
 정리하자면, RAII 객체의 복사는 객체가 관리하는 자원의 복사 문제를 안고 있으므로, 어떤 식으로 복사하냐를 고려하여야 한다. 일반적으로는 복사를 금지하거나, 참조 카운팅을 하기도 하지만, 위에 추가로 언급한 다른 방법들을 이용할 수도 있다.
+
+
+
+<br><br><br>
+
+
+<a name="Item15"></a>
+## 15. 자원 관리 클래스에서 관리하는 자원은 외부에서 접근이 가능하도록 하라.
+
+RAII 클래스의 객체(```shared_ptr```이나 ```auto_ptr``` 등)를 사용할 때에는, 그 객체의 실제 자원에 접근해야 할 일이 생긴다. 이 때는 실제 자원으로 변환할 방법이 필요한데, 명시적 변환(explicit conversion)과 암시적 변환(implicit conversion)이 있다.
+
+```shared_ptr```이나 ```auto_ptr```은 명시적 변환을 위한 ```get```함수를 제공한다.
+
+```cpp
+class seed
+{
+	...
+};
+
+int makeNum(const seed* s);
+
+int main()
+{
+	std::tr1::shared_ptr<seed> pSeed();
+	int myNum = makeNum(pSeed.get())
+	return 0;
+}
+```
+
+그리고 암시적 변환이 가능한 ```operator->```, ```operator*``` 연산자 역시 제공하고 있다.
+
+```cpp
+class seed
+{
+public:		bool isSetSeed();
+};
+
+int main()
+{
+	std::tr1::shared_ptr<seed> pSeed();
+	bool isSet1 = pSeed->isSetSeed();
+	bool isSet2 = (*pSeed).isSetSeed();
+	return 0;
+}
+```
+
+이런 식으로 암시적 변환 역시 가능하다.
+
+<br>
+
+```cpp
+FontHandle getFont();
+void releaseFont(FontHandle f);
+void changeFontSize(FontHandle f, int size);
+class Font
+{
+public:		explicit Font(FontHandle f);
+public:		~Font();
+public:		FontHandle	get() const;
+public:		operator FontHandle() const;
+private:	FontHandle 	_f;
+};
+
+Font::Font(FontHandle f)
+: _f(f)	//값에 의한 전달
+{
+	__noop;
+}
+
+Font::~Font()
+{
+	releaseFont(_f);
+}
+
+Font::get() const
+{
+	return _f;	//명시적 변환 함수
+}
+
+Font::operator FontHandle() const
+{
+	return _f;	//암시적 변환 함수
+}
+
+int main()
+{
+	Font f1(getFont());
+	int fontSize = 10;
+	changeFontSize(f1, fontSize);	//Font에서 FontHandle로 암시적 변환을 수행.
+
+	Font f2(getFont());
+	FontHandle fh = f2;				//Font 객체 복사를 의도했으나 f1이 FontHandle로 복사
+	return 0;
+}
+```
+
+이렇게 되면 ```Font``` 객체 ```f2```가 관리중인 ```FontHandle```이 ```fh```를 통해서도 사용이 가능해진다. ```f2```가 소멸될 때 ```fh```는 소멸된 객체에 매달린 셈이 되기 때문.
+
+RAII 클래스에게 명시적/암시적 변환을 허용하는 것은 이렇듯 용도와 사용 환경에 따라 달라진다. 결과적으로 잘 설계한 클래스라면 올바르게 쓰기는 편하고, 안 좋게 쓰기는 어렵게 짜야 한다.
+
+<br>
+
+RAII 클래스는 캡슐화에 위배되지만, 애초에 데이터 은닉을 위한 클래스가 아니기 때문에 상관은 없다. ```shared_ptr```은 엄격한 캡슐화와 느슨한 캡슐화를 모두 제공하고 있는데, 참조 카운팅 매커니즘에 필요한 것은 모두 캡슐화하고 있지만, 자신이 관리하는 포인터에는 쉽게 접근할 수 있게 한다는 것이 그 예이다.
+
+<br>
+
+정리하자면, RAII 클래스를 만들 때에는 그 클래스가 관리하는 자원에 접근해야 하는 기존 API들을 고려하여 자원을 얻을 통로를 열어두어야 한다. 그리고 자원 접근은 명시적/암시적 변환이 있는데, 안정성은 명시적 변환이, 편의성은 암시적 변환이 우수하다.
 
