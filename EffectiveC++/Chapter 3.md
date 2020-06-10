@@ -4,6 +4,8 @@
 [13. 자원 관리에는 객체를 이용하라.](#Item13)<br>
 [14. 자원 관리 클래스의 복사 동작을 확실히 알자.](#Item14)<br>
 [15. 자원 관리 클래스에서 관리하는 자원은 외부에서 접근이 가능하도록 하라.](#Item15)<br>
+[16. new, delete는 형태를 맞추어 사용하자.](#Item16)<br>
+[17. new로 생성한 객체를 스마트 포인터로 저장할 때는, 하나의 독립적인 문장으로 만들어라.](#Item17)<br>
 
 
 <br><br><br>
@@ -318,3 +320,90 @@ RAII 클래스는 캡슐화에 위배되지만, 애초에 데이터 은닉을 �
 
 정리하자면, RAII 클래스를 만들 때에는 그 클래스가 관리하는 자원에 접근해야 하는 기존 API들을 고려하여 자원을 얻을 통로를 열어두어야 한다. 그리고 자원 접근은 명시적/암시적 변환이 있는데, 안정성은 명시적 변환이, 편의성은 암시적 변환이 우수하다.
 
+
+
+<br><br><br>
+
+
+<a name="Item16"></a>
+## 16. new, delete는 형태를 맞추어 사용하자.
+
+```cpp
+int main()
+{
+	std::string* a = new std::string[10];
+	delete a;
+
+	return 0;
+}
+```
+
+이런 코드를 짜는 것은 문제가 된다.
+포인터 ```a```는 배열을 가리키고 있기 때문에, 단순하게 ```delete```로 끝맺어서는 안되는 까닭이다.
+이런 코드에서는 생성자가 호출된 횟수만큼 소멸자가 불리지 않게 되어 문제가 발생할 것이다.
+
+```cpp
+int main()
+{
+	std::string* a = new std::string[10];
+	delete[] a;
+
+	return 0;
+}
+```
+만약 배열을 삭제하려면 ```delete[]```를 사용하여야 한다.
+
+정리하자면, ```new``` 표현식에 ```[]```를 썼다면 ```delete```에도 똑같이 ```[]```를 써줘야 한다.
+
+
+
+
+<br><br><br>
+
+
+<a name="Item17"></a>
+## 17. new로 생성한 객체를 스마트 포인터로 저장할 때는, 하나의 독립적인 문장으로 만들어라.
+
+```cpp
+int getPriority();
+void processWidget(std::tr1::shared_ptr<Widget> widget, int priority);
+
+int main()
+{
+	processWidget(new widget, getPriority());	//컴파일 에러
+
+	processWidget(std::tr1::shared_ptr<Widget>(new Widget), getPriority());	//컴파일은 가능하나 문제 발생
+
+	return 0;
+}
+```
+
+이 코드에서는 자원을 흘리는 문제가 발생할 수 있다.
+
+컴파일러는 함수 호출을 하기 위해 매개변수를 평가(evaluate)한다. 여기서 두번째 인자는 ```getPriority()``` 함수의 호출문 뿐이다. 하지만 첫 인자는 ```new Widget```의 표현식을 실행하는 부분과, ```tr1::shared_ptr``` 생성자를 호출하는 부분으로 나누어진다.
+
+즉, 함수 호출이 일어나기 전에 컴파일러는 다음 세 연산을 할 코드를 만든다는 얘기이다.
+- ```getPriority``` 호출
+- ```new Widget``` 실행
+- ```tr1::shared_ptr``` 생성자 호출
+
+여기서 문제는, 연산 실행 순서가 컴파일러마다 차이가 있다는 점이다.
+
+물론 ```tr1::shared_ptr```은 ```new Widget```뒤에 호출될테지만, ```getPriority``` 함수의 호출은 언제 일어날 지 알 수 없다. 만약 이 부분에서 예외가 발생한다면? ```new Widget```으로 만든 포인터가 ```tr1::shared_ptr```에 저장되기 전에 끼어들어 문제가 생길 수 있다.
+
+그러므로 이런 문제가 발생하지 않게 독립적인 문장들로 쪼갤 필요가 있다.
+
+```cpp
+int getPriority();
+void processWidget(std::tr1::shared_ptr<Widget> widget, int priority);
+
+int main()
+{
+	std::tr1::shared_ptr<Widget> widget(new Widget);	//독립적인 문장으로 분리
+	processWidget(widget, getPriority());	//자원 누출을 걱정할 필요가 없어짐
+
+	return 0;
+}
+```
+
+정리하자면, ```new```로 생성한 객체를 스마트 포인터로 넣을 때에는, 독립적인 문장으로 쪼개야 한다. 그러지 않으면 예외가 발생해 메모리 릭이 발생할 수 있다.
